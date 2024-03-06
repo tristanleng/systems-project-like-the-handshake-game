@@ -1,72 +1,224 @@
-import { useEffect, useState } from "react";
-import papa from 'papaparse'
-import "./App.css";
-import type { DemoDataRow, PieDataRow } from "./types";
-import { PieChart, Pie, Cell, LabelList } from "recharts";
+import React, { FC, useEffect, useState } from "react";
+import {
+  defaultSimulationParameters,
+  type Patient,
+  type SimulationParameters,
+} from "./types";
+import { createPopulation, updatePopulation } from "./diseaseModel";
+import { LineChart, Line, YAxis, XAxis } from "recharts";
 
-const App = () => {
-  const [csvData,setCsvData] = useState<DemoDataRow[]>([]);
-  const [pieData,setPieData] = useState<PieDataRow[]>([]);
-  const csvFileUrl = '/data/demo.csv'; // FIX ME
-
-  const getData = async () => {
-    let response = await fetch(csvFileUrl);
-    let text = await response.text();
-    let parsed = await papa.parse<DemoDataRow>(text,{header:true});
-    console.log('Successfully parsed data:',parsed); // Log to make it easy to inspect shape of our data in the inspector
-    setCsvData(parsed.data.filter((row)=>row.Name)); // Only keep rows that have a name, so we avoid blank row at end of file
-  }
-
-
-
-
-  useEffect(
-    ()=>{getData()},[]
+const Patient: FC<{ patient: Patient }> = ({ patient }) => {
+  return (
+    <div
+      className="patient"
+      style={{ left: `${patient.x}%`, top: `${patient.y}%` }}
+    >
+      {patient.infected ? "🤢" : "😀"}
+    </div>
   );
+};
 
-  useEffect(
-    ()=>{
-      // Update whenever data changes...
-      let newPieCounts : {[key : string] : number} = {};
-      let newPieData : PieDataRow[] = [];
-      csvData.forEach(
-        (row)=>{
-          if (!newPieCounts[row["Favorite Color"]]) {
-            newPieCounts[row["Favorite Color"]] = 0; // initialize if not there...
+type DataPoint = {
+  infected: number;
+  newInfections: number;
+  total: number;
+  round: number;
+};
+
+const Settings: FC<{
+  parameters: SimulationParameters;
+  setParameters: (p: SimulationParameters) => void;
+}> = ({ parameters, setParameters }) => {
+  return (
+    <section>
+      <div>
+        <label>Neighbor Distance:</label>
+        <input
+          type="range"
+          min="0"
+          max="50"
+          value={parameters.distanceThreshold}
+          onChange={(e) =>
+            setParameters({
+              ...parameters,
+              distanceThreshold: parseInt(e.target.value),
+            })
           }
-          newPieCounts[row["Favorite Color"]]++ // Add one!
-        }
-      )
-      for (let key in newPieCounts) {
-        newPieData.push(
-          {name : key, value : newPieCounts[key]}
-        )
-      }
-      setPieData(newPieData);
-      console.log('Set new pie data!',newPieData)
-    }
-  ,[csvData])
+        />
+        <input
+          type="number"
+          min="0"
+          max="50"
+          value={parameters.distanceThreshold}
+          onChange={(e) =>
+            setParameters({
+              ...parameters,
+              distanceThreshold: parseInt(e.target.value),
+            })
+          }
+        />
+      </div>
+      <div>
+        <label>Movement:</label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={parameters.movement}
+          onChange={(e) =>
+            setParameters({ ...parameters, movement: parseInt(e.target.value) })
+          }
+        />
+        <input
+          type="number"
+          min="0"
+          max="100"
+          value={parameters.movement}
+          onChange={(e) =>
+            setParameters({ ...parameters, movement: parseInt(e.target.value) })
+          }
+        />
+      </div>
+      <div>
+        <label>Infection Chance:</label>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value={parameters.infectionChance}
+          onChange={(e) =>
+            setParameters({
+              ...parameters,
+              infectionChance: parseFloat(e.target.value),
+            })
+          }
+        />
+        <input
+          type="number"
+          min="0"
+          max="100"
+          value={parameters.infectionChance}
+          onChange={(e) =>
+            setParameters({
+              ...parameters,
+              infectionChance: parseFloat(e.target.value),
+            })
+          }
+        />
+      </div>
+    </section>
+  );
+};
 
+const App: FC = () => {
+  const [popSize, setPopSize] = useState<number>(40); /* Sqrt of size */
+  const [population, setPopulation] = useState<Patient[]>(
+    createPopulation(1600)
+  );
+  const [lineToGraph, setLineToGraph] = useState<"infected" | "newInfections">(
+    "infected"
+  );
+  const [diseaseData, setDiseaseData] = useState<DataPoint[]>([]);
+  const [autoMode, setAutoMode] = useState<boolean>(false);
+  const [simulationParameters, setSimulationParameters] =
+    useState<SimulationParameters>(defaultSimulationParameters);
+
+  useEffect(() => {
+    // Each time the population changes, we add an item to our disease...
+    let infectedCount = population.filter((p) => p.infected).length;
+    let oldInfectedCount =
+      diseaseData.length > 0 ? diseaseData[diseaseData.length - 1].infected : 0;
+    setDiseaseData([
+      ...diseaseData,
+      {
+        infected: infectedCount,
+        newInfections: infectedCount - oldInfectedCount,
+        total: population.length,
+        round: diseaseData.length,
+      },
+    ]);
+  }, [population]);
+
+  const runTurn = () => {
+    setPopulation(updatePopulation(population, simulationParameters));
+  };
+
+  const onPopInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPopSize(parseInt(e.target.value));
+  };
+
+  const resetPopulation = () => {
+    setPopulation(createPopulation(popSize * popSize));
+    setDiseaseData([]);
+  };
+  const autoRun = () => {
+    setAutoMode(true);
+  };
+  const stop = () => {
+    setAutoMode(false);
+  };
+
+  // We have an "effect" to run in auto-mode...
+  useEffect(() => {
+    if (autoMode) {
+      console.log("Automatically run the next one in a half a sec");
+      setTimeout(runTurn, 500);
+    }
+  }, [autoMode, population]);
 
   return (
-    <main style={{maxWidth:800,margin:'auto'}}>
-      <h1>Hello Data Visualization</h1>
-      <p>Loaded {csvData.length} rows of CSV Data!</p>
-      <h2>Favorite Colors:</h2>
-      <PieChart width={300} height={300}>
-        <Pie data={pieData} dataKey="value" nameKey="name" label fill="yellow">
-          <LabelList dataKey="name" position="middle"/>
-          {
-          pieData.map(
-            (entry)=>(<Cell key={entry.name} fill={entry.name.toLowerCase()} />)
-          )}
-        </Pie>
-
-      </PieChart>
-      {csvData.map(
-        (row,idx)=><div key={idx}>{row.Name} age {row.Age}'s favorite color is {row["Favorite Color"]} and they play {row["Favorite Sport"]}</div>
-      )}
-    </main>
+    <div>
+      <h1>My Systems Model</h1>
+      Population: {population.length}. Infected:{" "}
+      {population.filter((p) => p.infected).length}
+      <button onClick={runTurn}>Next turn...</button>
+      <button onClick={autoRun}>AutoRun</button>
+      <button onClick={stop}>Stop</button>
+      <input
+        type="range"
+        min="5"
+        max="150"
+        value={popSize}
+        onChange={onPopInput}
+      />
+      <button onClick={resetPopulation}>Reset Population</button>
+      <Settings parameters={simulationParameters} setParameters={setSimulationParameters} />
+      <section className="side-by-side">
+        <div className="chartContainer">
+          <LineChart data={diseaseData} width={400} height={400}>
+            <YAxis />
+            <XAxis />
+            <Line type="monotone" dataKey={lineToGraph} stroke="#f00" />
+          </LineChart>
+          <button onClick={() => setLineToGraph("infected")}>
+            Total Infected
+          </button>
+          <button onClick={() => setLineToGraph("newInfections")}>
+            New Infections
+          </button>
+        </div>
+        <div className="world">
+          {population.map((patient) => (
+            <Patient key={patient.id} patient={patient} />
+          ))}
+        </div>
+      </section>
+      <table>
+        <tr>
+          <th>Round</th>
+          <th>Total</th>
+          <th>New</th>
+        </tr>
+        {diseaseData.map((dataPoint) => (
+          <tr>
+            <td>{dataPoint.round}</td>
+            <td>{dataPoint.infected}</td>
+            <td>{dataPoint.newInfections}</td>
+          </tr>
+        ))}
+      </table>
+    </div>
   );
 };
 
