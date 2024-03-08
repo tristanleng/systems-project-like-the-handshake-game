@@ -5,9 +5,7 @@ export type Patient = {
   infected: boolean;
 };
 
-export type SimulationParameters = {
-  distanceThreshold: number;
-  movement: number;
+export type SimulationParameters = {  
   infectionChance: number;
 };
 

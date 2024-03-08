@@ -30,55 +30,7 @@ const Settings: FC<{
   setParameters: (p: SimulationParameters) => void;
 }> = ({ parameters, setParameters }) => {
   return (
-    <section>
-      <div>
-        <label>Neighbor Distance:</label>
-        <input
-          type="range"
-          min="0"
-          max="50"
-          value={parameters.distanceThreshold}
-          onChange={(e) =>
-            setParameters({
-              ...parameters,
-              distanceThreshold: parseInt(e.target.value),
-            })
-          }
-        />
-        <input
-          type="number"
-          min="0"
-          max="50"
-          value={parameters.distanceThreshold}
-          onChange={(e) =>
-            setParameters({
-              ...parameters,
-              distanceThreshold: parseInt(e.target.value),
-            })
-          }
-        />
-      </div>
-      <div>
-        <label>Movement:</label>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={parameters.movement}
-          onChange={(e) =>
-            setParameters({ ...parameters, movement: parseInt(e.target.value) })
-          }
-        />
-        <input
-          type="number"
-          min="0"
-          max="100"
-          value={parameters.movement}
-          onChange={(e) =>
-            setParameters({ ...parameters, movement: parseInt(e.target.value) })
-          }
-        />
-      </div>
+    <section>      
       <div>
         <label>Infection Chance:</label>
         <input
