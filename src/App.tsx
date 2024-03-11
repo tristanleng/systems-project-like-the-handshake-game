@@ -8,12 +8,25 @@ import { createPopulation, updatePopulation } from "./diseaseModel";
 import { LineChart, Line, YAxis, XAxis } from "recharts";
 
 const Patient: FC<{ patient: Patient }> = ({ patient }) => {
+
+  const getIcon : ()=>string = () => {
+    if (patient.infected) {
+      return "🤢"
+    } else {
+      if (patient.vaccinated) { 
+        return "😷"
+      } else { 
+        return "😀"
+      }
+    }
+  }
+
   return (
     <div
       className="patient"
       style={{ left: `${patient.x}%`, top: `${patient.y}%` }}
     >
-      {patient.infected ? "🤢" : "😀"}
+      {getIcon()}
     </div>
   );
 };
@@ -30,7 +43,7 @@ const Settings: FC<{
   setParameters: (p: SimulationParameters) => void;
 }> = ({ parameters, setParameters }) => {
   return (
-    <section>      
+    <section>
       <div>
         <label>Infection Chance:</label>
         <input
@@ -65,6 +78,7 @@ const Settings: FC<{
 
 const App: FC = () => {
   const [popSize, setPopSize] = useState<number>(40); /* Sqrt of size */
+  const [vaccinationrate, setVaccinationRate] = useState<number>(0);
   const [population, setPopulation] = useState<Patient[]>(
     createPopulation(1600)
   );
@@ -100,8 +114,12 @@ const App: FC = () => {
     setPopSize(parseInt(e.target.value));
   };
 
+  const onRateChangeee = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVaccinationRate(parseInt(e.target.value));
+  };
+
   const resetPopulation = () => {
-    setPopulation(createPopulation(popSize * popSize));
+    setPopulation(createPopulation(popSize * popSize, vaccinationrate));
     setDiseaseData([]);
   };
   const autoRun = () => {
@@ -134,8 +152,18 @@ const App: FC = () => {
         value={popSize}
         onChange={onPopInput}
       />
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value={vaccinationrate}
+        onChange={onRateChangeee}
+      />
       <button onClick={resetPopulation}>Reset Population</button>
-      <Settings parameters={simulationParameters} setParameters={setSimulationParameters} />
+      <Settings
+        parameters={simulationParameters}
+        setParameters={setSimulationParameters}
+      />
       <section className="side-by-side">
         <div className="chartContainer">
           <LineChart data={diseaseData} width={400} height={400}>
