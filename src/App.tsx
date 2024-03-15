@@ -8,7 +8,9 @@ import { createPopulation, updatePopulation } from "./diseaseModel";
 import { LineChart, Line, YAxis, XAxis } from "recharts";
 
 const Patient: FC<{ patient: Patient }> = ({ patient }) => {
-
+  
+   
+  // 
   const getIcon : ()=>string = () => {
     if (patient.infected) {
       return "🤢"
@@ -26,6 +28,7 @@ const Patient: FC<{ patient: Patient }> = ({ patient }) => {
       className="patient"
       style={{ left: `${patient.x}%`, top: `${patient.y}%` }}
     >
+      {/* comment */}
       {getIcon()}
     </div>
   );
@@ -142,9 +145,7 @@ const App: FC = () => {
       <h1>My Systems Model</h1>
       Population: {population.length}. Infected:{" "}
       {population.filter((p) => p.infected).length}
-      <button onClick={runTurn}>Next turn...</button>
-      <button onClick={autoRun}>AutoRun</button>
-      <button onClick={stop}>Stop</button>
+      <label>       Population Size:</label>
       <input
         type="range"
         min="5"
@@ -152,6 +153,16 @@ const App: FC = () => {
         value={popSize}
         onChange={onPopInput}
       />
+      <button onClick={runTurn}>Next turn...</button>
+      <button onClick={autoRun}>AutoRun</button>
+      <button onClick={stop}>Stop</button>
+      <button onClick={resetPopulation}>Reset Population</button>
+      <Settings
+        parameters={simulationParameters}
+        setParameters={setSimulationParameters}
+      />
+
+      <label>Vaccinated Population %:</label>
       <input
         type="range"
         min="0"
@@ -159,11 +170,7 @@ const App: FC = () => {
         value={vaccinationrate}
         onChange={onRateChangeee}
       />
-      <button onClick={resetPopulation}>Reset Population</button>
-      <Settings
-        parameters={simulationParameters}
-        setParameters={setSimulationParameters}
-      />
+    
       <section className="side-by-side">
         <div className="chartContainer">
           <LineChart data={diseaseData} width={400} height={400}>
