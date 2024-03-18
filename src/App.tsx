@@ -75,6 +75,7 @@ const Settings: FC<{
           }
         />
       </div>
+     
     </section>
   );
 };
@@ -142,7 +143,7 @@ const App: FC = () => {
 
   return (
     <div>
-      <h1>My Systems Model</h1>
+      <h1>Influenza System Model</h1>
       Population: {population.length}. Infected:{" "}
       {population.filter((p) => p.infected).length}
       <label>       Population Size:</label>
@@ -184,7 +185,20 @@ const App: FC = () => {
           <button onClick={() => setLineToGraph("newInfections")}>
             New Infections
           </button>
+          <div> <p> 
+        Healthy = 😀 <br>
+        </br>
+        Infected = 🤢 <br>
+        </br>
+        Vaccinated = 😷
+        
+        
+        
+        
+        
+        </p></div>
         </div>
+        
         <div className="world">
           {population.map((patient) => (
             <Patient key={patient.id} patient={patient} />
@@ -206,6 +220,7 @@ const App: FC = () => {
         ))}
       </table>
     </div>
+    
   );
 };
 

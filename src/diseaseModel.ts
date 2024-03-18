@@ -29,9 +29,12 @@ const updatePatient = (
 ): Patient => {
   let updatedPatient = { ...patient };
   // pick a random partner
+  //const partner procedure 
   const partner = population[Math.floor(Math.random() * population.length)];
   // if partner is infected and random number is less than infection chance...
-  if (partner.infected && 100*Math.random() < params.infectionChance) {       
+  //defining partner procedure 
+  if (partner.infected && 100*Math.random() < params.infectionChance) {      
+    //call procedure above  
     // if patient is not vaccinated
     if (!patient.vaccinated) {      
       // set infected to true   
@@ -40,7 +43,7 @@ const updatePatient = (
   }   
   return updatedPatient;
 };
-
+//update all patients in population 
 export const updatePopulation = (
   population: Patient[],
   params: SimulationParameters
